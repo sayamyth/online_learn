@@ -7,15 +7,20 @@ spring:
   datasource:
     username: root
     password: 123456
-    url: jdbc:mysql://localhost:3306/data?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/study?useUnicode=true&characterEncoding=utf-8&useSSL=true&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
   #配置静态资源访问路径
   mvc:
     static-path-pattern: /**
+  jpa:
+    database: mysql
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 #配置mybatis配置文件路径
-mybatis:
-  config-location: classpath:mybatis/mybatis-config.xml
-  mapper-locations: classpath:mybatis/mapper/**.xml
+#mybatis:
+#  config-location: classpath:mybatis/mybatis-config.xml
+#  mapper-locations: classpath:mybatis/mapper/**.xml
 #日志信息打印sql语句
 logging:
   level:
