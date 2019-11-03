@@ -12,12 +12,16 @@
     <link rel="stylesheet" href="/css/materialize.min.css">
     <link rel="stylesheet" href="/css/tooplate.css">
 </head>
-
+<script language="JavaScript">
+    if (window != top){//跳出iframe框架
+        top.location.href = location.href;
+    }
+</script>
 <body id="login">
     <div class="container">
         <div class="row tm-register-row tm-mb-35">
             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 tm-login-l">
-                <form action="loginIn" method="post" class="tm-bg-black p-5 h-100">
+                <form action="/loginIn" method="post" class="tm-bg-black p-5 h-100">
                     <div class="input-field">
                         <input placeholder="用户名" id="username" name="username" type="text" class="validate">
                     </div>

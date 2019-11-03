@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>用户添加</title>
+    <link rel="stylesheet" href="/layui/css/layui.css" media="all">
+    <script src="/layui/layui.js"></script>
+</head>
+<body>
+<form class="layui-form" action="">
+    <input name="id" hidden>
+    <div class="layui-form-item">
+        <label class="layui-form-label">问题</label>
+        <div class="layui-input-inline">
+            <input type="text" name="name" required lay-verify="required" placeholder="请输入班级名" autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid layui-word-aux">课程名</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">选项A</label>
+        <div class="layui-input-inline">
+            <input type="text" name="a" required lay-verify="required" placeholder="请输入答案" autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid layui-word-aux">课程名</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">选项B</label>
+        <div class="layui-input-inline">
+            <input type="text" name="b" required lay-verify="required" placeholder="请输入答案" autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid layui-word-aux">课程名</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">选项C</label>
+        <div class="layui-input-inline">
+            <input type="text" name="c" required lay-verify="required" placeholder="请输入答案" autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid layui-word-aux">课程名</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">选项D</label>
+        <div class="layui-input-inline">
+            <input type="text" name="d" required lay-verify="required" placeholder="请输入答案" autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid layui-word-aux">课程名</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">正确选项</label>
+        <div class="layui-input-inline">
+            <select name="answer" id="answer">
+
+            </select>
+        </div>
+        <div class="layui-form-mid layui-word-aux" id="unlock0">点击解锁选项</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">课程</label>
+        <div class="layui-input-inline">
+            <select name="courseid" id="list"></select>
+        </div>
+        <div class="layui-form-mid layui-word-aux" id="unlock">点击解锁其他课程</div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    //Demo
+    function child(data) {
+        layui.use(['form','layer'], function() {
+            var $ = layui.jquery;
+            var layer = layui.layer;
+            var form = layui.form;
+
+            console.log(data)
+            $('input[name="id"]').attr("value",data.questionId);
+            $('input[name="name"]').attr("value",data.questionName);
+            $('input[name="a"]').attr("value",data.optionA);
+            $('input[name="b"]').attr("value",data.optionB);
+            $('input[name="c"]').attr("value",data.optionC);
+            $('input[name="d"]').attr("value",data.optionD);
+
+            $("<option >"+data.answer+"</option>").appendTo($("#answer"))
+            $("<option value="+data.courseId+">"+data.courseName+"</option>").appendTo($("#list"))
+
+            form.render();
+        })
+
+    }
+    layui.use(['form','layer'], function(){
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+
+
+        //监听修改用户提交
+        form.on('submit(formDemo)', function(data){
+
+            $.ajax({
+                url:"updateQuestion",
+                data:data.field,
+                success:function (res) {
+
+                    layer.msg(res.extend.msg);
+                    var index = parent.layer.getFrameIndex(window.name);
+                    setTimeout(function () {
+                        parent.layer.close(index);//关闭当前页
+                    }, 1000)
+                },
+                error:function () {
+                    layer.msg("出错了");
+                    var index = parent.layer.getFrameIndex(window.name);
+                    setTimeout(function () {
+                        parent.layer.close(index);//关闭当前页
+                    }, 1000)
+                }
+            })
+            return false;
+        });
+
+        //点击解锁其他权限
+        $("#unlock").on("click",function () {
+            var select = $("#list").empty();
+            $.ajax({
+                url: "/getCourseList",
+                beforeSend: function () {
+                    // 禁用按钮防止重复提交
+                    var unlock = $("#unlock").empty();
+                    $("<i class=\"layui-icon\">&#xe63e;</i>").appendTo(unlock);
+                },
+                success: function (res) {
+                    $.each(res, function (index, item) {
+                        var option = $("<option value=" + item.courseId + "></option>").append(item.courseName);
+                        select.append(option);
+                    });
+                    form.render();
+                },
+                complete:function () {
+                    var unlock = $("#unlock").empty();
+                    $("<i class=\"layui-icon\">&#xe605;</i>").appendTo(unlock)
+                }
+            })
+        })
+        
+        $("#unlock0").on("click",function () {
+            var answer = $("#answer").empty();
+            answer.append($("<option >A</option>")).append($("<option >B</option>")).append($("<option >C</option>")).append($("<option >D</option>"))
+            var unlock = $("#unlock0").empty();
+            $("<i class=\"layui-icon\">&#xe605;</i>").appendTo(unlock)
+            form.render();
+        })
+
+    });
+</script>
+</body>
+</html>

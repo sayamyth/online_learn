@@ -2,43 +2,38 @@ package com.example.online_learn.controller;
 
 import com.example.online_learn.dao.LoginDao;
 import com.example.online_learn.entity.User;
+import com.example.online_learn.service.LoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 @Controller
 public class LoginController {
     @Autowired
-    private LoginDao loginDao;
+    private LoginService loginService;
     /**
      * 验证登陆信息
      */
     @RequestMapping("loginIn")
     public String loginIn(String username, String password, HttpServletRequest request, Model model){
-        try {
-            User user = loginDao.findUserByName(username);
-            System.out.println(user.toString());
-            if (user !=null){
-                if (user.getuPassword().equals(password)){
-                    request.setAttribute("user",user);
-                    return "index";
-                }else {
-                    System.out.println("密码出错了");
-                    model.addAttribute("loginMsg","密码不正确");
-                    return "login";
-                }
+        User user = loginService.login(username);
+        if (user!=null){
+            if (user.getUserPassword().equals(password)){
+                HttpSession session = request.getSession();
+                session.setAttribute("user",user);
+                session.setMaxInactiveInterval(600);
+                return "index";
             }else {
-                System.out.println("用户不存在");
-                model.addAttribute("loginMsg","用户不存在");
+                model.addAttribute("loginMsg","密码错误");
                 return "login";
             }
-        }catch (NullPointerException e){
-            System.out.println(e);
-            System.out.println("抛异常，用户不存在");
-            model.addAttribute("loginMsg","用户不存在");
+
+        }else {
+            model.addAttribute("loginMsg","账号不存在");
             return "login";
         }
 

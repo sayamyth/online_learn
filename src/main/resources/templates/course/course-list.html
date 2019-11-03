@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>集成页面</title>
+    <link rel="stylesheet" href="/layui/css/layui.css" media="all">
+</head>
+<body>
+
+
+<div class="layui-btn-group">
+    <button class="layui-btn data-add-btn" id="new-add"><i class="layui-icon">&#xe61f;</i>添加新课程</button>
+    <button class="layui-btn layui-btn-danger data-delete-btn" id="del"><i class="layui-icon">&#xe640;</i>批量删除</button>
+</div>
+
+
+<input id="input1" style="width: 200px;height: 30px;margin-left: 50px" type="text" name="tiltle" placeholder="输入班级名查询">
+<button id="selectUser" class="layui-btn layui-btn-normal"><i class="layui-icon">&#xe615;</i>查找</button>
+
+
+<table id="demo" lay-filter="test"></table>
+
+<!--工具条-->
+<script type="text/html" id="currentTableBar">
+<!--    <a class="layui-btn layui-btn-xs " lay-event="edit">修改</a>-->
+<!--    <a class="layui-btn layui-btn-danger layui-btn-xs " lay-event="del">删除</a>-->
+    <button type="button" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="edit">
+        <i class="layui-icon">&#xe642;</i>
+    </button>
+    <button type="button" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="del">
+        <i class="layui-icon">&#xe640;</i>
+    </button>
+</script>
+<script src="/layui/layui.js"></script>
+<script th:inline="none">
+    layui.use('table', function () {
+        var $ = layui.jquery;
+        var table = layui.table;
+
+        //数据表格展示数据
+        table.render({
+            elem: '#demo'
+            // , height: 472
+            , url: 'getCourseListWithPage' //数据接口
+            , page: true //开启分页
+            , cols: [[ //表头
+                {type: "checkbox", width: 50, fixed: "left", align: "center"}
+                , {type: 'numbers', title: '序号', sort: true, width: 50, align: "center"}
+                , {field: 'courseId', title: 'ID', width: 80, sort: true, align: "center",hide:true}
+                , {field: 'courseName', title: '课程', align: "center"}
+                , {title: '操作', width: 150, templet: '#currentTableBar', fixed: "right", align: "center"}
+            ]],
+            limit: 10,
+            limits: [10, 20, 30],
+            response: {statusCode: 0},
+            parseData: function (res) {
+                return {
+                    "code": 0, //解析接口状态
+                    "msg": "", //解析提示文本
+                    "count": res.totalElements, //解析数据长度
+                    "data": res.content //解析数据列表
+                }
+            }
+        });
+        //模糊查询
+        $("#selectUser").on("click",function () {
+            var coursename = $("#input1").val();
+            table.reload('demo', {
+                url:'/getCourseListByNameWithPage',
+                where: {
+                    coursename: coursename
+                },
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+            });
+        })
+        //添加新的用户
+        $("#new-add").on("click", function () {
+            layer.open({
+                type: 2,
+                content: ['/toCourseAdd', "no"],//跳转到添加用户页面，你还可以content: ['http://sentsin.com', 'no']
+                area: ['460px', '250px'],
+                //弹出动画
+                anim: 1,
+                //关闭按钮样式
+                closeBtn: 2,
+                end: function () {
+                    //do something
+                    table.reload('demo', {
+                        url: '/getCourseListWithPage',
+                        page: {
+                            curr: 1 //重新从第 1 页开始
+                        }
+                    }); //只重载数据
+                }
+            });
+        })
+        //多行删除，既批量删除
+        $("#del").on("click", function () {
+            var checkStatus = table.checkStatus('demo'); //idTest 即为基础参数 id 对应的值
+            var data = checkStatus.data;
+            if (JSON.stringify(data) == null || JSON.stringify(data) == "[]") {
+                layer.msg("选择不能为空");
+            } else {
+                layer.confirm('确定删除选中的行么', function (index) {
+                    if (index) {
+                        var id = [];
+                        console.log(data);
+                        for (var i = 0; i < data.length; i++) {
+                            id += data[i].courseId + ","
+                        }
+                        console.log(id);
+                        //发送删除命令
+                        $.ajax({
+                            url: "/deleteCourse",
+                            data: {"id": id},
+                            success: function (res) {
+                                layer.alert(res.extend.msg)
+                                table.reload('demo', {
+                                    url: '/getCourseListWithPage',
+                                    page: {
+                                        curr: 1 //重新从第 1 页开始
+                                    }
+                                }); //只重载数据
+                            },
+                            error: function () {
+                                layer.alert("出错啦");
+                            }
+                        })
+                        return false;
+                    } else {
+                        layer.close(index);
+                    }
+                })
+
+            }
+        })
+
+        //监听工具条删除修改操作
+        table.on('tool(test)', function (obj) { //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            var tr = obj.tr; //获得当前行 tr 的 DOM 对象（如果有的话）
+
+            if (layEvent === 'del') { //删除
+                layer.confirm('确定删除这一行数据嘛', function (index) {
+                    // obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                    layer.close(index);
+                    //向服务端发送删除指令
+                    //发送删除命令
+                    $.ajax({
+                        url: "/deleteCourse",
+                        data: {"id": data.courseId},
+                        success: function (res) {
+                            layer.alert(res.extend.msg)
+                        },
+                        error: function () {
+                            layer.alert("出错啦");
+                        }
+                    })
+                    table.reload('demo', {
+                        url: '/getCourseListWithPage',
+                        page: {
+                            curr: 1 //重新从第 1 页开始
+                        }
+                    }); //只重载数据
+                });
+            } else if (layEvent === 'edit') { //编辑
+                layer.open({
+                    type: 2,
+                    content: ['/toCourseUpdate', "no"],//跳转到添加用户页面，你还可以content: ['http://sentsin.com', 'no']
+                    area: ['460px', '250px'],
+                    //弹出动画
+                    anim: 1,
+                    //关闭按钮样式
+                    closeBtn: 2,
+                    success: function (layero, index) {
+                        var iframe = window['layui-layer-iframe' + index];
+                        //调用子页面的全局函数
+                        iframe.child(data)
+                    },
+                    end: function () {
+                        //do something
+                        table.reload('demo', {
+                            url: '/getCourseListWithPage',
+                            page: {
+                                curr: 1 //重新从第 1 页开始
+                            }
+                        }); //只重载数据
+                    }
+                });
+
+                //同步更新缓存对应的值
+                obj.update({
+                    username: '123'
+                    , title: 'xxx'
+                });
+            } else {
+                layer.close(index);
+            }
+        });
+
+    });
+
+</script>
+</body>
+</html>

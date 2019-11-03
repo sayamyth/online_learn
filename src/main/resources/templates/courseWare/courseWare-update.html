@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>用户添加</title>
+    <link rel="stylesheet" href="/layui/css/layui.css" media="all">
+    <script src="/layui/layui.js"></script>
+</head>
+<body>
+<form class="layui-form" action="">
+    <input name="id" id="id" hidden>
+    <div class="layui-form-item">
+        <label class="layui-form-label">课程</label>
+        <div class="layui-input-inline">
+            <input type="text" name="name" required lay-verify="required" placeholder="请输入课程名" autocomplete="off" class="layui-input">
+        </div>
+        <div class="layui-form-mid layui-word-aux">课程名称</div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">课程</label>
+        <div class="layui-input-inline">
+<!--            <input type="text" name="coursewarename" required lay-verify="required" placeholder="请输入课程名" autocomplete="off" class="layui-input">-->
+            <select id="courseid" name="courseid"></select>
+        </div>
+        <div class="layui-form-mid layui-word-aux" id="unlock">解锁课程</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">课程</label>
+        <div class="layui-input-inline">
+            <!--            <input type="text" name="coursewarename" required lay-verify="required" placeholder="请输入课程名" autocomplete="off" class="layui-input">-->
+            <select id="typeid" name="typeid"></select>
+        </div>
+        <div class="layui-form-mid layui-word-aux" id="unlock0">解锁课程</div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    //Demo
+    function child(data) {
+        layui.use(['form','layer'], function() {
+            var $ = layui.jquery;
+            var layer = layui.layer;
+            var form = layui.form;
+
+            console.log(data)
+            $('input[name="id"]').attr("value",data.courseWareId);
+            $('input[name="name"]').attr("value",data.prefix)
+
+
+
+            $("<option value="+data.courseId+">"+data.courseName+"</option>").appendTo($("#courseid"));
+            // $('input[name="courseid"]').attr("value",data.courseId)
+            // $('input[name="coursename"]').attr("value",data.courseName)
+            $("<option value="+data.courseWareTypeId+">"+data.courseWareTypeName+"</option>").appendTo($("#typeid"));
+            form.render();
+        })
+
+    }
+    layui.use(['form','layer'], function(){
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+
+
+        //监听修改用户提交
+        form.on('submit(formDemo)', function(data){
+            console.log(data.elem) //被执行事件的元素DOM对象，一般为button对象
+            console.log(data.form) //被执行提交的form对象，一般在存在form标签时才会返回
+            console.log(data.field) //当前容器的全部表单字段，名值对形式：{name: value}
+            $.ajax({
+                url:"updateCourseWare",
+                data:data.field,
+                success:function (res) {
+
+                    layer.msg(res.extend.msg);
+                    var index = parent.layer.getFrameIndex(window.name);
+                    setTimeout(function () {
+                        parent.layer.close(index);//关闭当前页
+                    }, 1000)
+                },
+                error:function () {
+                    layer.msg("出错了");
+                    var index = parent.layer.getFrameIndex(window.name);
+                    setTimeout(function () {
+                        parent.layer.close(index);//关闭当前页
+                    }, 1000)
+                }
+            })
+            return false;
+        });
+
+        //点击解锁其他权限
+        $("#unlock").on("click",function () {
+            var select = $("#courseid").empty();
+            $.ajax({
+                url: "/getCourseList",
+                beforeSend: function () {
+                    // 禁用按钮防止重复提交
+                    var unlock = $("#unlock").empty();
+                    $("<i class=\"layui-icon\">&#xe63e;</i>").appendTo(unlock);
+                },
+                success: function (res) {
+                    $.each(res, function (index, item) {
+                        var option = $("<option value=" + item.courseId + "></option>").append(item.courseName);
+                        select.append(option);
+                    });
+                    form.render();
+                },
+                complete:function () {
+                    var unlock = $("#unlock").empty();
+                    $("<i class=\"layui-icon\">&#xe605;</i>").appendTo(unlock)
+                }
+            })
+        })
+        $("#unlock0").on("click",function () {
+            var select = $("#typeid").empty();
+            $.ajax({
+                url: "/getWareTypeList",
+                beforeSend: function () {
+                    // 禁用按钮防止重复提交
+                    var unlock = $("#unlock0").empty();
+                    $("<i class=\"layui-icon\">&#xe63e;</i>").appendTo(unlock);
+                },
+                success: function (res) {
+                    $.each(res,function (index,item) {
+                        var option = $("<option value="+item.courseWareTypeId+">"+item.courseWareTypeName+"</option>");
+                        option.appendTo(select);
+                    })
+                    form.render();
+                },
+                complete:function () {
+                    var unlock = $("#unlock0").empty();
+                    $("<i class=\"layui-icon\">&#xe605;</i>").appendTo(unlock)
+                }
+            })
+        })
+
+
+
+        // //获取权限列表
+        // $(function () {
+        //     var select = $("#list");
+        //     $.ajax({
+        //         url:"/getTypeList",
+        //         success:function (res) {
+        //             $.each(res, function (index, item) {
+        //                 var option = $("<option value="+item.typeId+"></option>").append(item.typeName);
+        //                 select.append(option);
+        //             });
+        //             form.render();
+        //             // for (var i = 0;i<res.length;i++){
+        //             //     var option = $("<option value="+res[i].typeId+">"+res[i].typeName+"</option>");
+        //             //     select.append(option)
+        //             // }
+        //         }
+        //     })
+        // })
+    });
+</script>
+</body>
+</html>

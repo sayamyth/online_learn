@@ -17,6 +17,11 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 60MB
+      max-request-size: 100MB
+
 #配置mybatis配置文件路径
 #mybatis:
 #  config-location: classpath:mybatis/mybatis-config.xml

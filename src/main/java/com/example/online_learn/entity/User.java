@@ -1,61 +1,112 @@
 package com.example.online_learn.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+
+import javax.persistence.*;
 
 @Entity
+@Table
 public class User {
+    //主键id
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;//主键id
+    @Column(name = "user_id")
+    private long userId;
 
-    private String uName;//用户名
+    //用户名
+    @Column(name = "user_name")
+    private String userName;
 
-    private String uPassword;//密码
+    //密码
+    @Column(name = "user_password")
+    private String userPassword;
 
-    private String type;//用户类型
+    //用户类型
+    @NotFound(action= NotFoundAction.IGNORE)
+    @ManyToOne( targetEntity = Type.class)
+    @JoinColumn(name = "type_id")
+    @JsonBackReference
+    private Type type;
 
-    public long getId() {
-        return id;
+    //专用字段不存入数据库用来接收值
+    @Transient
+    private String typeName;
+    @Transient
+    private String typeId;
+
+    @OneToOne(mappedBy = "user")
+    private UserInfo userInfo;
+
+    public String getTypeId() {
+        return typeId;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setTypeId(String typeId) {
+        this.typeId = typeId;
     }
 
-    public String getuName() {
-        return uName;
+    public String getTypeName() {
+        return typeName;
     }
 
-    public void setuName(String uName) {
-        this.uName = uName;
+    public void setTypeName(String typeName) {
+        this.typeName = typeName;
     }
 
-    public String getuPassword() {
-        return uPassword;
+    public long getUserId() {
+        return userId;
     }
 
-    public void setuPassword(String uPassword) {
-        this.uPassword = uPassword;
+    public void setUserId(long userId) {
+        this.userId = userId;
     }
 
-    public String getType() {
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getUserPassword() {
+        return userPassword;
+    }
+
+    public void setUserPassword(String userPassword) {
+        this.userPassword = userPassword;
+    }
+
+    public Type getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(Type type) {
         this.type = type;
+    }
+
+    public UserInfo getUserInfo() {
+        return userInfo;
+    }
+
+    public void setUserInfo(UserInfo userInfo) {
+        this.userInfo = userInfo;
+    }
+
+    /**
+     * 构造方法
+     */
+    public User() {
     }
 
     @Override
     public String toString() {
         return "User{" +
-                "id=" + id +
-                ", uName='" + uName + '\'' +
-                ", uPassword='" + uPassword + '\'' +
-                ", type='" + type + '\'' +
+                "userId=" + userId +
+                ", userName='" + userName + '\'' +
+                ", userPassword='" + userPassword + '\'' +
                 '}';
     }
 }
